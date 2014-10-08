@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  TwitterWebAuthViewController.h
 //  TWApplicationMyTwitterAPI
 //
 //  Created by Maksim Polishyk on 07.10.14.
@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+@interface TwitterWebAuthViewController : UIViewController
 
+
+@property (nonatomic, strong) IBOutlet UIWebView *webView;
 
 @end
-

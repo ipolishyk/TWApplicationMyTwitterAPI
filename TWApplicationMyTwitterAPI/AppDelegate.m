@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "StartViewController.h"
 
 @interface AppDelegate ()
 
@@ -15,8 +16,84 @@
 @implementation AppDelegate
 
 
+@synthesize netStatus;
+@synthesize hostReach;
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reachabilityChanged:)
+                                                 name:kReachabilityChangedNotification
+                                               object:nil];
+    self.hostReach = [Reachability reachabilityWithHostName:@"www.apple.com"];
+    [hostReach startNotifier];
+    [self updateInterfaceWithReachability: hostReach];
+    
+    //netStatus - Хранит состояние сети(есть или нету доступ к Интернету)
+    //hostReach - Следит за состоянием сети
+    
+    StartViewController *startViewController = [[StartViewController alloc] initWithNibName:@"StartViewController" bundle:nil];
+    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.rootViewController =startViewController;
+
+    [self.window makeKeyAndVisible];
+
+    return YES;
+}
+
+
+
+- (void) updateInterfaceWithReachability: (Reachability*) curReach {
+    self.netStatus = [curReach currentReachabilityStatus];
+}
+
+- (void) reachabilityChanged: (NSNotification* )note {
+    Reachability* curReach = [note object];
+    NSParameterAssert([curReach isKindOfClass: [Reachability class]]);
+    [self updateInterfaceWithReachability: curReach];
+}
+
+
+- (NSDictionary *)parametersDictionaryFromQueryString:(NSString *)queryString {
+    
+    NSMutableDictionary *md = [NSMutableDictionary dictionary];
+    
+    NSArray *queryComponents = [queryString componentsSeparatedByString:@"&"];
+    
+    for(NSString *s in queryComponents) {
+        NSArray *pair = [s componentsSeparatedByString:@"="];
+        if([pair count] != 2) continue;
+        
+        NSString *key = pair[0];
+        NSString *value = pair[1];
+        
+        md[key] = value;
+    }
+    
+    return md;
+}
+
+
+
+// Вызываем если авторизация прошла успешно
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    
+    
+    if ([[url scheme] isEqualToString:@"myapp"] == NO) return NO;
+    
+    NSDictionary *d = [self parametersDictionaryFromQueryString:[url query]];
+    
+    NSString *token = d[@"oauth_token"];
+    NSString *verifier = d[@"oauth_verifier"];
+  
+    StartViewController *vc = (StartViewController *)[[self window] rootViewController];
+    
+    //Передаем токен методу setOAuthToken в нашем StartViewController
+    [vc setOAuthToken:token oauthVerifier:verifier];
+    
     return YES;
 }
 
