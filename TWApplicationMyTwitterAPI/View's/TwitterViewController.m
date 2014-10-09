@@ -61,6 +61,12 @@
 
 -(void)updateTweet{
     //Обновляемм ленту - грузим еще последние десять твитов начиная с ID последнего твита который был сохранен в БД с предыдущей загрузки
+
+    
+    if([[TWEngine getLastTweetID] doubleValue]==0){
+        
+        [self firstTweetLoad];
+    }else{
     
         [twitter getHomeTimelineSinceID:[TWEngine getLastTweetID]
                               count:5
@@ -78,6 +84,7 @@
         NSLog(@"%@",error);
         [self showErrorConnection:error.localizedDescription];
     }];
+    }
 }
 
 -(void)updateOldTweet{
@@ -86,9 +93,12 @@
     NSString *lastID;
     if([tweetTableArray count]>0){
     lastID =[[tweetTableArray objectAtIndex:[tweetTableArray count]-1] valueForKey:@"id_str"];
-
+        
+       
+        
     [tweetTableArray removeObjectAtIndex:[tweetTableArray count]-1];
         
+
     }else{
         
        lastID=nil;
@@ -100,7 +110,9 @@
         
         [tweetTableArray addObjectsFromArray:tweetArray];
         [tweetTableView reloadData];
+        if([tweetTableArray count]>4){
         [tweetTableView setBounces:YES];
+        }
         
     } errorBlock:^(NSError *error) {
         NSLog(@"%@",error);
@@ -246,8 +258,9 @@
     CGFloat contentYoffset = scrollView.contentOffset.y;
     CGFloat distanceFromBottom = scrollView.contentSize.height - contentYoffset;
     
-    if(distanceFromBottom < height)
+    if(distanceFromBottom < height&& tweetTableView.bounces)
     {
+       
         [tweetTableView setBounces:NO];
         [self updateOldTweet];
         
